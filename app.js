@@ -1,5 +1,5 @@
 let roomID
-
+const port=process.env.PORT || 8080
 const
 	members = new Object,
 	http = require('http'),
@@ -56,4 +56,4 @@ io.sockets.on('connection', socket => {
 	})
 })
 
-server.listen(8080)
+server.listen(port)
