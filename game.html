@@ -216,7 +216,7 @@
 			})
 		}
 
-		function hasWon() {
+				function hasWon() {
 			for (let g = 0; g < winWhen.length; g++) {
 				if (
 					btn[winWhen[g][0]].innerText != '' &&
@@ -235,7 +235,13 @@
 					}
 				}
 			}
-			if (data.state.indexOf(-1) == -1) {
+			let doclear = true
+			for (let g = 0; g < 9; g++) {
+				if(btn[g].innerText == '') {
+					doclear = false
+				}
+			}
+			if (doclear) {
 				window.setTimeout(clear, 300)
 			}
 			return false;
