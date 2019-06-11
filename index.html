@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Tic Tac Toe</title>
+  <link rel="stylesheet" href="https://necolas.github.io/normalize.css/8.0.1/normalize.css">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:500&display=swap" rel="stylesheet">
+  <style>
+    body {
+	    margin: 0;
+      height: 100vh;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      display: grid
+    }
+    * {
+	    outline: none
+    }
+    button {
+      cursor: pointer;
+      text-transform: lowercase
+    }
+    #createRoom:active {
+      background: #FBC02D;
+      color: #333;
+    }
+    #createRoom {
+      justify-self: center;
+      align-self: center;
+      line-height: 40px;
+      width: 175px;
+      border: 0 none;
+      background: #ffeb3b;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <button id="createRoom">Create Room</button>
+  <script>
+    document.getElementById('createRoom').addEventListener('click', (e) => {
+      e.srcElement.innerText = "Generating..."
+      e.srcElement.disabled = true
+      setTimeout(() => {
+        const roomString = (Math.random() + 1).toString(36).substring(7)
+        window.location.replace(window.location + roomString)
+      }, 300)
+    })
+  </script>
+</body>
+
+</html>

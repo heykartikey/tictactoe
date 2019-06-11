@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Tic Tac Toe - </title>
+	<link href="https://fonts.googleapis.com/css?family=Muli:400" rel="stylesheet">
+	<style>
+		#overlay {
+			left: 0;
+			right: 0;
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			display: grid;
+			text-align: center;
+			background: #a2d4c8c7;
+			align-content: center;
+		}
+
+		html,
+		body {
+			margin: 0;
+			height: 100vh;
+			width: 100vw;
+			font-family: 'Muli', sans-serif;
+			user-select: none;
+		}
+
+		body {
+			display: grid;
+			grid-template: auto 512px auto / auto 360px auto;
+		}
+
+		#root {
+			grid-column-start: 2;
+			grid-row-start: 2;
+			display: grid;
+			grid-template-rows: repeat(3, 3.3fr) 1.1fr;
+			border: 1px solid;
+		}
+
+		header {
+			font-size: 36px;
+			display: grid;
+			align-content: center;
+			justify-content: center;
+		}
+
+		#base {
+			display: grid;
+			grid-template: auto 124px auto / auto 124px auto;
+		}
+
+		footer {
+			border-bottom: 1px solid;
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+		}
+
+		footer div {
+			display: grid;
+			align-content: center;
+			justify-content: center;
+		}
+
+		footer div {
+			font-size: 32px;
+		}
+
+		#undo,
+		#board,
+		#redo {
+			grid-row-start: 2;
+			display: grid;
+			align-content: center;
+			justify-content: center;
+		}
+
+		#board {
+			grid-template: repeat(3, 40px) / repeat(3, 40px);
+			background: #999;
+			grid-gap: 1px;
+			padding: 1px;
+		}
+
+		button {
+			background: white;
+			border: 0 none;
+			font: inherit;
+			transition-duration: 0.3s;
+		}
+
+		#board button:focus {
+			outline: 1px dashed #333;
+		}
+
+		#player {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			grid-gap: 1px;
+			background: #333;
+		}
+
+		#player div {
+			display: grid;
+			align-content: center;
+			justify-content: center;
+		}
+
+		#player-a,
+		#player-b {
+			transition-duration: 0.3s;
+			background-color: lightblue;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="overlay">Waiting for another player to join</div>
+	<div id="root">
+		<header>Tic Tac Toe</header>
+		<div id="base">
+			<div id="undo">
+				<!-- <button onclick="data.clear()">Clear</button> -->
+			</div>
+			<div id="board">
+				<button value="0"></button>
+				<button value="1"></button>
+				<button value="2"></button>
+				<button value="3"></button>
+				<button value="4"></button>
+				<button value="5"></button>
+				<button value="6"></button>
+				<button value="7"></button>
+				<button value="8"></button>
+			</div>
+			<div id="redo">
+				<!-- <button onclick="data.newGame()">Restart</button> -->
+			</div>
+		</div>
+		<footer>
+			<div id="score-a">0</div>
+			<div id="score-b">0</div>
+		</footer>
+		<div id="player">
+			<div id='player-a'>Player A</div>
+			<div id='player-b'>Player B</div>
+		</div>
+	</div>
+
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+		const socket = io()
+		const room = document.URL.split('/')[3]
+		socket.on('connect', () => {
+			socket.emit('checkRoom', room)
+		})
+
+		socket.on('roomAvailable', () => {
+			socket.emit('addUser', prompt("What's your name?"), room)
+		})
+
+		const pA = document.getElementById('player-a')
+		const pB = document.getElementById('player-b')
+
+		socket.on('updateName', (user1, user2) => {
+			document.getElementById('overlay').style.display = 'none'
+			pA.innerText = user1
+			pB.innerText = user2
+		})
+		const winWhen = [
+			[0, 1, 2],
+			[0, 3, 6],
+			[0, 4, 8],
+			[1, 4, 7],
+			[2, 4, 6],
+			[2, 5, 8],
+			[3, 4, 5],
+			[6, 7, 8]
+		]
+		const btn = document.querySelectorAll('#board button')
+
+		function toggle(disable) {
+			for (let i = 0; i < btn.length; i++) {
+				btn[i].disabled = disable
+			}
+		}
+
+		toggle(true)
+
+		socket.on('anb', () => {
+			toggle(false)
+		})
+
+		document.title += ' [ Room: ' + room + ' ]'
+
+		const data = {
+			state: [-1, -1, -1, -1, -1, -1, -1, -1, -1],
+
+		}
+
+		let now = 'X',
+			s1 = 0,
+			s2 = 0
+
+		for (let i = 0; i < btn.length; i++) {
+			btn[i].addEventListener('click', e => {
+				if (data.state[e.srcElement.value | 0] == -1) {
+					data.state[e.srcElement.value | 0] = now
+					toggle(true)
+					socket.emit('moveMade', data, room)
+				}
+			})
+		}
+
+		function hasWon() {
+			for (let g = 0; g < winWhen.length; g++) {
+				if (
+					btn[winWhen[g][0]].innerText != '' &&
+					btn[winWhen[g][1]].innerText != '' &&
+					btn[winWhen[g][2]].innerText != ''
+				) {
+					if (
+						btn[winWhen[g][0]].innerText == btn[winWhen[g][1]].innerText &&
+						btn[winWhen[g][1]].innerText == btn[winWhen[g][2]].innerText
+					) {
+						for (k = 0; k < 3; k++) {
+							btn[winWhen[g][k]].style.background = "gold"
+						}
+						window.setTimeout(clear, 1000);
+						return true;
+					}
+				}
+			}
+			if (data.state.indexOf(-1) == -1) {
+				setTimeout(clear, 300)
+			}
+			return false;
+		}
+
+		function fill() {
+			for (let i = 0; i < 9; i++) {
+				btn[i].innerText = '';
+			}
+		}
+
+		function clear() {
+			for (let i = 0; i < 9; i++) {
+				btn[i].style.backgroundColor = '#fff'
+			}
+			data.state = new Array(9).fill(-1);
+			for (let i = 0; i < btn.length; i++) {
+				if (data.state[i] != -1) {
+					btn[i].innerText = data.state[i]
+				}
+			}
+			fill();
+		}
+
+		socket.on('update', data => {
+			for (let i = 0; i < btn.length; i++) {
+				if (data.state[i] != -1) {
+					btn[i].innerText = data.state[i]
+				}
+			}
+			let won = hasWon();
+			if (won) {
+				if (now === 'X') {
+					s1++;
+					document.getElementById('score-a').innerText = s1
+				} else {
+					s2++;
+					document.getElementById('score-b').innerText = s2
+				}
+				if (s1 > s2) {
+					pA.style.backgroundColor = 'greenyellow';
+					pB.style.backgroundColor = 'lightcoral';
+				} else if (s1 === s2) {
+					pA.style.backgroundColor = 'lightblue';
+					pB.style.backgroundColor = 'lightblue';
+				} else {
+					pB.style.backgroundColor = 'greenyellow';
+					pA.style.backgroundColor = 'lightcoral';
+				}
+			}
+			now = now == 'X' ? 'O' : 'X'
+		})
+	</script>
+</body>
+
+</html>
